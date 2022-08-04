@@ -1,6 +1,7 @@
 # Large files
 *.csv
 *.geojson
+*.tif
 downloads/
 
 # shapefiles (just store the .zip files) 
