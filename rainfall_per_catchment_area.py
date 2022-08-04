@@ -23,7 +23,7 @@ import yaml
 import click
 
 @click.command()
-@click.option("--settings_file", type = str, required = True, default = 'settings.yaml', show_default = True, help = "YAML file with global settings (input/output file names, etc.)" )
+@click.option("--settings_file", type = str, required = True, default = 'settings.yml', show_default = True, help = "YAML file with global settings (input/output file names, etc.)" )
 @click.option('--remove_temp', is_flag=True, default=False, show_default = True, help = "remove the intermediate files created by the pipeline? (default: keep temp/ folder)")
 def collect_rainfall_data(settings_file, remove_temp):
     """
