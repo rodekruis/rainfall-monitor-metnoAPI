@@ -10,6 +10,10 @@ Use the `environment.yml` file to create a new conda environment with all the re
 ```
 conda env create --file environment.yml
 ```
+then enter the newly created environment 
+```
+conda activate RK510-RainFallMonitorYr
+```
 
 ### using pip only
 Alternatively, install the required packages (as specified in the `requirements.txt` file) into your existing Python environment. 
