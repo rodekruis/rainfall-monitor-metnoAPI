@@ -27,7 +27,7 @@ import click
 @click.option('--remove_temp', is_flag=True, default=False, show_default = True, help = "remove the intermediate files created by the pipeline? (default: keep temp/ folder)")
 def collect_rainfall_data(settings_file, remove_temp):
     """
-    Uses Metno weather API (LocationForecast) to retrieve rainfall predictions (approx. until ~2days in advance).
+    Uses Metno weather API (LocationForecast) to retrieve rainfall predictions (approx. until ~10days in advance).
     Aggregate the predicted rainfall in mm (for every timepoint available through the API) over catchment areas.
     Obtain a single long-format CSV-file with columns:
 
