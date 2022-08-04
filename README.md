@@ -33,7 +33,7 @@ which returns:
 Usage: rainfall_per_catchment_area.py [OPTIONS]
 
   Uses Metno weather API (LocationForecast) to retrieve rainfall predictions
-  (approx. until ~2days in advance). Aggregate the predicted rainfall in mm
+  (approx. until ~10days in advance). Aggregate the predicted rainfall in mm
   (for every timepoint available through the API) over catchment areas. Obtain
   a single long-format CSV-file with columns:
 
