@@ -4,11 +4,18 @@ Use MET Weather API to get forecast of rainfall for Malawi cities. Starting poin
 
 ...
 ## Instalation 
-Use the `environment.yml` file to create a new conda environment 
+
+### using conda 
+Use the `environment.yml` file to create a new conda environment with all the requirements installed into it. 
 ```
-conda env create --file envname.yml
+conda env create --file environment.yml
 ```
 
+### using pip only
+Alternatively, install the required packages (as specified in the `requirements.txt` file) into your existing Python environment. 
+```
+pip install -r requirements.txt
+```
 
 
 
