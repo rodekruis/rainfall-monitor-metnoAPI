@@ -1,0 +1,8 @@
+user-agent: "510Global"
+points_API_calls_file: './shapefiles/Malawi_API_calls_catchments_dissolved.geojson'
+catchment_areas: './shapefiles/CatchmentsShapefile/'
+download_dir: './temp/downloads/Malawi/'
+geotable_file: './temp/Malawi_rainfal_long_format.geojson'
+raster_file:  './temp/Malawi_rainfall.tif'
+zonal_stats_catchment: 'Malawi_rainfall_zonal.csv'
+
