@@ -3,6 +3,7 @@
 *.geojson
 *.tif
 downloads/
+temp/
 
 # shapefiles (just store the .zip files) 
 *.cpg
@@ -96,6 +97,9 @@ target/
 # IPython
 profile_default/
 ipython_config.py
+
+# PyCharm
+*.idea/
 
 # pyenv
 .python-version
