@@ -8,6 +8,7 @@ Obtain a single long-format CSV-file with columns:
 
 -------> first version created by: Misha Klein, August 2022
 """
+from email.policy import default
 import numpy as np
 import pandas as pd
 from metno_locationforecast import Place, Forecast
