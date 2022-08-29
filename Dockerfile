@@ -24,6 +24,7 @@ COPY settings.yml settings.yml
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 COPY rainfall_per_catchment_area.py ./src/rainfall_per_catchment_area.py 
+COPY .env.yml /home/myapp/
 CMD [ "python", "./src/rainfall_per_catchment_area.py", "--settings_file=./settings.yml", "--remove_temp" ]
 
 

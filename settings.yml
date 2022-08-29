@@ -5,4 +5,5 @@ download_dir: '/home/myapp/temp/downloads/Malawi/'
 geotable_file: '/home/myapp/temp/Malawi_rainfal_long_format.geojson'
 raster_file:  '/home/myapp/temp/Malawi_rainfall.tif'
 zonal_stats_catchment: '/home/myapp/Malawi_rainfall_zonal.csv'
+cloud_file: '/rainfall/mwi/Malawi_rainfall_zonal.csv'
 

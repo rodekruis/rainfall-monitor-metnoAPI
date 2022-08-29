@@ -22,6 +22,7 @@ import shutil
 import zipfile
 import yaml
 import click
+from azure.storage.blob import BlobServiceClient
 
 @click.command()
 @click.option("--settings_file", type = str, required = True, default = 'settings.yml', show_default = True, help = "YAML file with global settings (input/output file names, etc.)" )
@@ -54,6 +55,7 @@ def collect_rainfall_data(settings_file, remove_temp):
     file_raster = settings['raster_file']
     file_catchment_areas = settings['catchment_areas']
     file_zonal_stats = settings['zonal_stats_catchment']
+    file_cloud = settings['cloud_file']
 
     # -- Get predictions on grid ---
 
@@ -94,10 +96,16 @@ def collect_rainfall_data(settings_file, remove_temp):
         aggregate.rename(rename_dict, axis='columns', inplace=True)
         aggregate['time_of_prediction'] = pd.to_datetime(timepoint.values)
         rainfall_per_catchment = pd.concat([rainfall_per_catchment, aggregate])
-
-    # save to CSV file
     rainfall_per_catchment.reset_index(drop=True, inplace=True)
-    rainfall_per_catchment.to_csv(file_zonal_stats, index=False)
+
+    # save as CSV in Azure's cloud storage 
+    write_to_azure_cloud_storage(
+        data=rainfall_per_catchment,
+        local_filename=file_zonal_stats,
+        cloud_filename=file_cloud
+    )
+
+
     print(f"created: {file_zonal_stats}")
     print("--"*8 + "\n"*2)
 
@@ -289,6 +297,34 @@ def zonal_statistics(rasterfile, shapefile,
     for idx, metric in enumerate(aggregate_by):
         zonalStats[f'value_{idx+1}'] = aggregates_of_zones[idx]    
     return zonalStats
+
+
+def write_to_azure_cloud_storage(data, local_filename, cloud_filename):
+    """
+    write resulting .csv file to cloud storrage of Azure. 
+
+    data container: ibf 
+    -----
+    data: Assumed to be a Pandas Dataframe that you write to CSV 
+    local_filename: Path to the file on your computer (or inside Docker Container)
+    cloud_filename: Path to the destination in Azure 
+    """
+
+
+
+    # TODO: Replace the following by call to Azure's secure information storage service --- 
+    with open(".env.yml","r") as env:
+        sectrets = yaml.safe_load(env)
+ 
+    # --- Create instance of BlobServiceClient to connect to Azure's data storage ---
+    blob_service_client = BlobServiceClient.from_connection_string(sectrets['connectionString'])
+    blob_client = blob_service_client.get_blob_client(container=sectrets['DataContainer'], blob=cloud_filename)
+
+    # --- write data to cloud --- 
+    data.to_csv(local_filename, index=False)
+    with open(local_filename, "rb") as upload_file:
+        blob_client.upload_blob(upload_file, overwrite=True)
+    
 
 
 
