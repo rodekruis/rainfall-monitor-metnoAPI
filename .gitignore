@@ -1,3 +1,6 @@
+# sensitive info
+.env.yml
+
 # Large files
 *.csv
 *.geojson
