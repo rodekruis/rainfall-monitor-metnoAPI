@@ -1,9 +1,15 @@
-user-agent: "510Global"
-points_API_calls_file: '/home/myapp/shapefiles/Malawi_API_calls_catchments_dissolved.geojson'
-catchment_areas: '/home/myapp/shapefiles/CatchmentsShapefile/'
-download_dir: '/home/myapp/temp/downloads/Malawi/'
-geotable_file: '/home/myapp/temp/Malawi_rainfal_long_format.geojson'
-raster_file:  '/home/myapp/temp/Malawi_rainfall.tif'
-zonal_stats_catchment: '/home/myapp/Malawi_rainfall_zonal.csv'
-cloud_file: '/rainfall/mwi/Malawi_rainfall_zonal.csv'
-
+METnoAPI:
+  user-agent: "510Global"
+  download_dir: '/home/myapp/temp/downloads/Malawi/'
+  geotable_file: '/home/myapp/temp/Malawi_rainfal_long_format.geojson'
+geoCoordinates:
+  locations_of_interest: '/home/myapp/shapefiles/Malawi_API_calls_catchments_dissolved.geojson'
+  catchment_areas: '/home/myapp/shapefiles/CatchmentsShapefile/'
+on_local:
+  tif_raw:  '/home/myapp/temp/Malawi_rainfall.tif'
+  csv_zonal_stats: '/home/myapp/Malawi_rainfall_zonal.csv'
+  png_images_dir: '/home/myapp/MWI_rainfall_mm/'
+in_cloud: 
+  tif_raw: '/rainfall/mwi/Malawi_rainfall.tif' 
+  csv_zonal_stats: '/rainfall/mwi/Malawi_rainfall_zonal.csv'
+  png_images_dir: '/rainfall/mwi/MWI_ranfall_mm/'
