@@ -17,6 +17,7 @@ import rasterio
 import rasterstats
 import rioxarray
 import xarray as xr
+from tqdm import tqdm
 import os
 import shutil
 import zipfile
@@ -27,7 +28,8 @@ from azure.storage.blob import BlobServiceClient
 @click.command()
 @click.option("--settings_file", type = str, required = True, default = 'settings.yml', show_default = True, help = "YAML file with global settings (input/output file names, etc.)" )
 @click.option('--remove_temp', is_flag=True, default=False, show_default = True, help = "remove the intermediate files created by the pipeline? (default: keep temp/ folder)")
-def collect_rainfall_data(settings_file, remove_temp):
+@click.option('--store_in_cloud', is_flag=True, default=False, show_default = True, help = "Store final CSV in Azure's cloud storage")
+def collect_rainfall_data(settings_file, remove_temp, store_in_cloud):
     """
     Uses Metno weather API (LocationForecast) to retrieve rainfall predictions (approx. until ~10days in advance).
     Aggregate the predicted rainfall in mm (for every timepoint available through the API) over catchment areas.
@@ -58,7 +60,6 @@ def collect_rainfall_data(settings_file, remove_temp):
     file_cloud = settings['cloud_file']
 
     # -- Get predictions on grid ---
-
     print("weather predictions for gridpoints...")
     rainfall_gdf = API_requests_at_gridpoints(
         filename_gridpoints=file_points_api_calls, 
@@ -79,7 +80,7 @@ def collect_rainfall_data(settings_file, remove_temp):
     print("zonal stats...")
     # get info in long-format
     rainfall_per_catchment = pd.DataFrame()
-    for band_idx, timepoint in enumerate(rainfall_array.time_of_prediction):
+    for band_idx, timepoint in tqdm(enumerate(rainfall_array.time_of_prediction)):
         aggregate = zonal_statistics(rasterfile=file_raster,
                                      shapefile=file_catchment_areas,
                                      minval=0.,  # rainfall cannot be negative
@@ -99,16 +100,22 @@ def collect_rainfall_data(settings_file, remove_temp):
     rainfall_per_catchment.reset_index(drop=True, inplace=True)
 
     # save as CSV in Azure's cloud storage 
-    write_to_azure_cloud_storage(
-        data=rainfall_per_catchment,
-        local_filename=file_zonal_stats,
-        cloud_filename=file_cloud
-    )
+    if store_in_cloud:
+        write_to_azure_cloud_storage(
+            data=rainfall_per_catchment,
+            local_filename=file_zonal_stats,
+            cloud_filename=file_cloud
+        )
 
 
-    print(f"created: {file_zonal_stats}")
-    print("--"*8 + "\n"*2)
+        print(f"created: {file_cloud}")
+        print("--"*8 + "\n"*2)
 
+    # only save locally 
+    else: 
+        rainfall_per_catchment.to_csv(file_zonal_stats, index=False)
+        print(f"created: {file_zonal_stats}")
+        print("--"*8 + "\n"*2)
     if remove_temp:
         shutil.rmtree('./temp/')
         print("removed temporary files")
@@ -150,7 +157,7 @@ def API_requests_at_gridpoints(filename_gridpoints, save_to_file, destination_di
     time_of_prediction = []
     predicted_hrs_ahead = [] 
 
-    for idx,row in grid.iterrows(): 
+    for idx,row in tqdm(grid.iterrows()): 
 
         # --- create Place() object --- 
         name = f"point_{idx}"
