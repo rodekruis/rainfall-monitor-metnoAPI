@@ -33,14 +33,3 @@ CMD [ "python", "./src/rainfall_per_catchment_area.py", "--settings_file=./setti
 
 
 
-
-
-
-
-
-
-
-
-
-
-

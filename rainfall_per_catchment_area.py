@@ -8,6 +8,7 @@ Obtain a single long-format CSV-file with columns:
 
 -------> first version created by: Misha Klein, August 2022
 """
+from asyncore import write
 from email.policy import default
 import enum
 from threading import local
@@ -21,6 +22,7 @@ import rioxarray
 import xarray as xr
 from tqdm import tqdm
 import os
+import glob
 import shutil
 import zipfile
 import yaml
@@ -29,6 +31,7 @@ from azure.storage.blob import BlobServiceClient
 import matplotlib.pyplot as plt 
 import seaborn as sns 
 import cmocean
+
 
 @click.command()
 @click.option("--settings_file", type = str, required = True, default = 'settings.yml', show_default = True, help = "YAML file with global settings (input/output file names, etc.)" )
@@ -51,24 +54,28 @@ def collect_rainfall_data(settings_file, remove_temp, store_in_cloud):
     if not os.path.exists('./temp'):
         os.mkdir('./temp')
         os.mkdir('./temp/downloads')
+    
+    if not os.path.exists('./output'):
+        os.mkdir('./output')
+    
 
     # --- unpack settings ---
     with open(settings_file,'r') as f:
         settings = yaml.safe_load(f)
     USER_AGENT = settings['METnoAPI']['user-agent']
     download_dir = settings['METnoAPI']['download_dir']
-    file_geotable = settings['METnoAPI']['geotable_file']
     file_points_api_calls = settings['geoCoordinates']['locations_of_interest']
     file_catchment_areas = settings['geoCoordinates']['catchment_areas']
-    file_raster_local = settings['on_local']['tif_raw']
-    file_raster_cloud = settings['in_cloud']['tif_raw']
+    output_dir = settings['on_local']['output_dir']
+    file_geotable = os.path.join(output_dir, settings['on_local']['geojson_raw'])
+    file_raster = os.path.join(output_dir, settings['on_local']['tif_raw'])
+
+    # file_raster_cloud = settings['in_cloud']['tif_raw']
     dir_png_local = settings['on_local']['png_images_dir']
-    dir_png_cloud = settings['in_cloud']['png_images_dir']
     if not os.path.exists(dir_png_local):
         os.mkdir(dir_png_local)
     
-    file_zonal_stats_local = settings['on_local']['csv_zonal_stats']
-    file_zonal_stats_cloud = settings['in_cloud']['csv_zonal_stats']
+    file_zonal_stats = os.path.join(output_dir, settings['on_local']['csv_zonal_stats'])
 
     # -- Get predictions on grid ---
     print("weather predictions for gridpoints...")
@@ -83,8 +90,8 @@ def collect_rainfall_data(settings_file, remove_temp, store_in_cloud):
 
     # --- Save as TIF file ---
     print("save into TIF format....")
-    rainfall_array = gdf_to_rasterfile(rainfall_gdf, save_to_file=file_raster_local)
-    print(f"created: {file_raster_local}")
+    rainfall_array = gdf_to_rasterfile(rainfall_gdf, save_to_file=file_raster)
+    print(f"created: {file_raster}")
     print("--"*8 + "\n"*2)
 
     # --- perform zonal statistics ---
@@ -92,7 +99,7 @@ def collect_rainfall_data(settings_file, remove_temp, store_in_cloud):
     # get info in long-format
     rainfall_per_catchment = pd.DataFrame()
     for band_idx, timepoint in tqdm(enumerate(rainfall_array.time_of_prediction)):
-        aggregate = zonal_statistics(rasterfile=file_raster_local,
+        aggregate = zonal_statistics(rasterfile=file_raster,
                                      shapefile=file_catchment_areas,
                                      minval=0.,  # rainfall cannot be negative
                                      aggregate_by=[np.mean, np.std, np.max, np.min],
@@ -109,33 +116,27 @@ def collect_rainfall_data(settings_file, remove_temp, store_in_cloud):
         aggregate['time_of_prediction'] = pd.to_datetime(timepoint.values)
         rainfall_per_catchment = pd.concat([rainfall_per_catchment, aggregate])
     rainfall_per_catchment.reset_index(drop=True, inplace=True)
-    rainfall_per_catchment.to_csv(file_zonal_stats_local, index=False)
+    rainfall_per_catchment.to_csv(file_zonal_stats, index=False)
+    print(f"created: {file_zonal_stats}")
+    print("--"*8 + "\n"*2)
 
 
 
     # ---- create image of rainfall with overlay of catchement areas --- 
     print("creating PNG images...")
     plot_rainfall_map(rainfall_da=rainfall_array, catchment_shapefile=file_catchment_areas, destination_fldr=dir_png_local)
+    print(f"wrote PNG files into: {dir_png_local}")
+    print("--"*8 + "\n"*2)
 
-    # save as in Azure's cloud storage 
+    # # --- write output files to cloud if needed  ---
+    # NOTE: It is assumed you wrote all files into the same directory on local 
     if store_in_cloud:
-        write_to_azure_cloud_storage(local_filename=file_zonal_stats_local,cloud_filename=file_zonal_stats_cloud)
-        write_to_azure_cloud_storage(local_filename=file_raster_local, cloud_filename=file_raster_cloud)
-
-        for filename in os.listdir(dir_png_local):
-            if filename.endswith('.png'):
-                write_to_azure_cloud_storage(local_filename=os.path.join(dir_png_local,filename), cloud_filename=os.path.join(dir_png_cloud, filename))
-
-        print(f"created: {file_zonal_stats_cloud} on Azure datalake")
-        print(f"created: {file_raster_cloud} on Azure datalake")
-        print(f"wrote PNG files into: {dir_png_cloud} on Azure datalake")
-        print("--"*8 + "\n"*2)
-
-    # only save locally 
-    else: 
-        print(f"created: {file_zonal_stats_local}")
-        print(f"created: {file_raster_local}")
-        print(f"wrote PNG files into: {dir_png_local}")
+        cloud_dir = settings['in_cloud']['output_dir']
+        output_files = [f for f in glob.glob(f'{output_dir}/**', recursive=True) if os.path.isfile(f)]        
+        for file_on_local in output_files:
+            file_in_cloud = os.path.join(cloud_dir, os.path.relpath(file_on_local, output_dir))
+            write_to_azure_cloud_storage(local_filename=file_on_local, cloud_filename=file_in_cloud)
+            print(f"created: {file_in_cloud} in Azure datalake")
         print("--"*8 + "\n"*2)
 
     if remove_temp:
@@ -359,6 +360,7 @@ def plot_rainfall_map(rainfall_da, catchment_shapefile, destination_fldr):
         basename = timestamp_str(timestamp, fmt="%Y%m%d_%H_%M_%S")
         filename = os.path.join(destination_fldr, f"{basename}.png")
         plt.savefig(filename, format="png", dpi=300, bbox_inches='tight');
+        plt.close();
  
 
 def timestamp_str(timestamp, fmt = "%m/%d/%Y, %H:%M:%S"):
@@ -389,7 +391,6 @@ def write_to_azure_cloud_storage(local_filename, cloud_filename):
     with open(local_filename, "rb") as upload_file:
         blob_client.upload_blob(upload_file, overwrite=True)
     
-
 
 
 if __name__ == '__main__':
