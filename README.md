@@ -14,8 +14,12 @@ The code `rainfall_per_catchment_area.py` will:
 3. Perform 'zonal statistics' to get aggregated values per catchement area
   - Shapefile catchment area: `catchment_areas` in `settings.yml` (`Folder with (zipped) shapefile(s)`)
   - Resulting zonal statistics:  `zonal_stats_catchment` in `settings.yml` (.CSV)
-4. Finally, write the file into Azure's cloud storage: 
-  - `could_file` in `settings.yml` 
+4. Aggregate predictions by the day. Get the total for that day (typically three days worth of data available). Note that the final day might be based on less than a full day. 
+  - both zonal and daily aggregates stored into `csv_zonal_stats_daily`
+  - bar graph stored into `png_bar_plot_daily_by_catchment`
+  - daily aggregates for all locations stored into TIF file `tif_raw_daily`
+5. Finally, write all files produced into Azure's cloud storage: 
+  - `in_cloud/output_dir` in `settings.yml` 
 
 
 **NOTE 1:** Running the code with the `--remove_temp` option will delete all intermediate files created and will just write the resulting CSV into the cloud storage.
@@ -28,14 +32,23 @@ The code `rainfall_per_catchment_area.py` will:
 ## Building the Docker image with costum `settings.yml` 
 To run the code for a different country, or to simply adjust the filenames of the output: 
 1. Supply the following `.yml`-format file:
-  - user-agent: "510Global" (*Technically, it's value doesn't matter, just that you supply somekind of identification of "Hi I am downloading this file and my name is `user-agent`")
-  - points_API_calls_file: GeoJSON file with coordinates for which you want to download the rainfall predictions 
-  - catchment_areas: shapefile (directory) with boundaries you will aggregate your results by 
-  - download_dir: (temporary) directory to store the downloaded data from MET Weather 
-  - geotable_file: GeoJSON file with long-format rainfall predictions after download
-  - raster_file:  TIF file with one image/layer per timepoint, every layer contains rainfall predictions accross the ROI sampled, as supplied in `points_API_calls_file`
-  - zonal_stats_catchment: CSV file with aggregate rainfall predictions 
-  - cloud_file: CSV file with aggregate rainfall predictions, path on Azure's cloud storrage (OPTIONAL) 
+
+  - `METnoAPI`:
+    - `user-agent`: "510Global" (*Technically, it's value doesn't matter, just that you supply somekind of identification of "Hi I am downloading this file and my name is `user-agent`")
+    - `download_dir`: (temporary) directory to store the downloaded data from MET Weather
+  - `geoCoordinates`:
+    - `catchment_areas`: shapefile (directory) with boundaries you will aggregate your results by 
+    - `locations_of_interest`: GeoJSON file with coordinates for which you want to download the rainfall predictions 
+  - `on_local`:
+    - `output_dir`: Destination within local machine (or within docker container)
+    - `geojson_raw`: GeoJSON file with long-format rainfall predictions after download
+    - `tif_raw`:  TIF file with one image/layer per timepoint, every layer contains rainfall predictions accross the ROI sampled, as supplied in `points_API_calls_file`
+    - `tif_raw_daily`: TIF file with one image/layer per day 
+    - `csv_zonal_stats`: CSV file with aggregate rainfall predictions
+    - `csv_zonal_stats_daily`: CSV file with aggregate rainfall predictions both by catchment area and by day 
+    - `png_images_dir`: destination folder for all PNGs generates 
+  - `in_cloud`:
+    - `output_dir`: Destination (container) in Azure's cloud storrage (OPTIONAL)
   
 2. Build the Docker image: 
   ```
