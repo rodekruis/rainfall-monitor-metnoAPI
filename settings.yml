@@ -10,5 +10,8 @@ on_local:
   tif_raw:  'Malawi_rainfall.tif'
   csv_zonal_stats: 'Malawi_rainfall_zonal.csv'
   png_images_dir: '/home/myapp/output/MWI_rainfall_mm/'
+  csv_zonal_stats_daily: 'Malawi_rainfall_zonal_daily.csv'
+  png_bar_plot_daily_by_catchment: 'Malawi_rainfall_by_day_by_catchment.png'
+  tif_raw_daily: 'Malawi_rainfall_daily.tif'
 in_cloud: 
   output_dir: '/rainfall/mwi/' 

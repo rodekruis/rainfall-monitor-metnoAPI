@@ -31,6 +31,7 @@ from azure.storage.blob import BlobServiceClient
 import matplotlib.pyplot as plt 
 import seaborn as sns 
 import cmocean
+import datetime
 
 
 @click.command()
@@ -70,12 +71,16 @@ def collect_rainfall_data(settings_file, remove_temp, store_in_cloud):
     file_geotable = os.path.join(output_dir, settings['on_local']['geojson_raw'])
     file_raster = os.path.join(output_dir, settings['on_local']['tif_raw'])
 
-    # file_raster_cloud = settings['in_cloud']['tif_raw']
+
     dir_png_local = settings['on_local']['png_images_dir']
     if not os.path.exists(dir_png_local):
         os.mkdir(dir_png_local)
     
     file_zonal_stats = os.path.join(output_dir, settings['on_local']['csv_zonal_stats'])
+    file_zonal_daily = os.path.join(output_dir, settings['on_local']['csv_zonal_stats_daily'])
+    file_png_bar_plot_daily = os.path.join(output_dir, settings['on_local']['png_bar_plot_daily_by_catchment'])
+    file_raster_daily = os.path.join(output_dir, settings['on_local']['tif_raw_daily'])
+
 
     # -- Get predictions on grid ---
     print("weather predictions for gridpoints...")
@@ -122,9 +127,26 @@ def collect_rainfall_data(settings_file, remove_temp, store_in_cloud):
 
 
 
+
+    # ---- get daily aggregates ------- 
+    print(f"determining daily aggregates per catchment area....")
+    # per catchment area 
+    daily_rainfall_per_catchment = daily_aggregates_per_catchment(rainfall_per_catchment, save_to_file=file_zonal_daily, save_fig_to_png = file_png_bar_plot_daily)
+    print(f"created:{file_zonal_daily}")
+    print(f"created:{file_png_bar_plot_daily}")
+
+    # per timestamp 
+    print(f"determining daily aggregates for every location....")
+    daily_rainfall_arr = daily_aggregates_per_location(rainfall_gdf, save_to_file=file_raster_daily)
+    print("creating PNG images .....")
+    plot_rainfall_map_per_day(rainfall_da=daily_rainfall_arr,catchment_shapefile=file_catchment_areas, destination_fldr=dir_png_local)
+    print(f"wrote PNG files into: {dir_png_local}")
+    print("--"*8 + "\n"*2)
+
+
     # ---- create image of rainfall with overlay of catchement areas --- 
-    print("creating PNG images...")
-    plot_rainfall_map(rainfall_da=rainfall_array, catchment_shapefile=file_catchment_areas, destination_fldr=dir_png_local)
+    print("creating PNG images per timestamp...")
+    plot_rainfall_map_per_timestamp(rainfall_da=rainfall_array, catchment_shapefile=file_catchment_areas, destination_fldr=dir_png_local)
     print(f"wrote PNG files into: {dir_png_local}")
     print("--"*8 + "\n"*2)
 
@@ -237,7 +259,7 @@ def read_grid(dirname):
                                           y = grid['latitude'])
     return grid 
 
-def gdf_to_rasterfile(rainfall_gdf, save_to_file = None):
+def gdf_to_rasterfile(rainfall_gdf, key_values='rain_in_mm', key_index = 'time_of_prediction',save_to_file = None):
     """
     convert GeoDataFrame to xarray with dimensions and coordinates equal to latitude, longtitude and the time prediction
     
@@ -246,9 +268,10 @@ def gdf_to_rasterfile(rainfall_gdf, save_to_file = None):
     """
     # --- convert the GeoDataFrame into xarray (to have it as a 3D object with coordinates of lat, long and timepoint) ---- 
     rainfall_array = rainfall_gdf.rename({'longtitude':'x', 'latitude':'y'}, axis ='columns')
-    rainfall_array = rainfall_array[rainfall_array['predicted_hrs_ahead'] == 1.]
-    rainfall_array.set_index(['time_of_prediction', 'y','x'], inplace = True)
-    rainfall_array = rainfall_array['rain_in_mm'].to_xarray()
+    if 'predicted_hrs_ahead' in rainfall_gdf.columns:
+        rainfall_array = rainfall_array[rainfall_array['predicted_hrs_ahead'] == 1.]
+    rainfall_array.set_index([key_index, 'y','x'], inplace = True)
+    rainfall_array = rainfall_array[key_values].to_xarray()
     
     if save_to_file is not None:
         rainfall_array.rio.to_raster(save_to_file)
@@ -327,8 +350,140 @@ def zonal_statistics(rasterfile, shapefile,
         zonalStats[f'value_{idx+1}'] = aggregates_of_zones[idx]    
     return zonalStats
 
+def daily_aggregates(df, aggregate_by):
+    """
+    sum up predicted rainfall over a day 
+    Will continue to do such for however many days you have retreived a prediction for 
 
-def plot_rainfall_map(rainfall_da, catchment_shapefile, destination_fldr):
+    NOTE: Final day might be less than 24hrs worth of hourly predictions 
+    """
+    # start by resetting index as an ensurance (to make it work in combination with 'groupby' operation)
+    df.reset_index(inplace=True, drop=True)
+    
+    # initialize 
+    start_indx_day = 0
+    one_day = datetime.timedelta(days=1)
+    daily_totals = pd.DataFrame()
+    days_predicted_ahead = 0 
+    
+    # let the algorithm automatically find how many days we have predictions for 
+    while start_indx_day < len(df)-1:
+        
+        # index / timestamps of first and last predictions within a day 
+        first_of_day = pd.to_datetime(df.time_of_prediction[start_indx_day])
+        end_indx_day  = np.where(pd.to_datetime(df.time_of_prediction)<=first_of_day+one_day)[0][-1]
+        last_of_day = pd.to_datetime(df.time_of_prediction[end_indx_day])
+        
+        # progress number days we could predict for 
+        days_predicted_ahead +=1
+        
+        # slice data to get data belonging to the same day 
+        data_of_day = df.iloc[start_indx_day:end_indx_day]
+        data_of_day.reset_index(inplace=True, drop=True)
+        
+        # summarize by adding together the average rainfall over the day
+        aggregate_of_day = pd.DataFrame()
+        aggregate_of_day['days_ahead'] = [days_predicted_ahead]
+        aggregate_of_day['tot_rainfall_mm'] = [data_of_day[aggregate_by].sum()]
+        
+        
+        # combine days into single output 
+        daily_totals = pd.concat([daily_totals, aggregate_of_day])
+        
+        # reset loop: Start from the start of the next day 
+        start_indx_day = end_indx_day+1
+    return daily_totals 
+
+def daily_aggregates_per_catchment(df, save_to_file=None, save_fig_to_png = None):
+    """
+    aggregate predicted rainfall per day (per catchment area)
+
+    returns resulting dataframe 
+    creates PNG with barplot 
+    """
+    combine_areas_daily = pd.DataFrame()
+    for area, group in df.groupby('name'):
+        one_area_daily = daily_aggregates(group, aggregate_by='mean')
+        one_area_daily['name'] = area
+        combine_areas_daily =  pd.concat([combine_areas_daily, one_area_daily])
+    
+    if save_fig_to_png is not None:
+        combine_areas_daily.to_csv(save_to_file, index=False)
+
+    if save_fig_to_png is not None:
+        plt.figure(figsize=(10,5))
+        sns.barplot(x = 'name', 
+                    y = 'tot_rainfall_mm', 
+                    hue = 'days_ahead', 
+                    data = combine_areas_daily,
+                    palette = 'Accent',
+            )
+        plt.xticks(fontsize = 14, rotation = 90);
+        plt.yticks(fontsize = 14);
+        plt.xlabel("catchment area", fontsize = 14);
+        plt.ylabel("total rainfall (mm)", fontsize = 16);
+        sns.despine();
+        plt.savefig(save_fig_to_png, format='png', dpi=300, bbox_inches='tight');
+
+    return combine_areas_daily
+
+
+def daily_aggregates_per_location(gdf, save_to_file=None):
+    """
+    Aggregate raw data by day and store into TIF. 
+    Also produce PNGs with daily totals with overlay of catchment areas 
+    """
+
+    # just use the predictions for 1 hour ahead (not for 6 hours ahead)
+    gdf = gdf[gdf['predicted_hrs_ahead'] == 1]
+
+    # because df.groupby() is much faster in pandas vs geopandas, convert back and forth 
+    df = pd.DataFrame(gdf)  
+    combine_locations_daily = pd.DataFrame()
+    for (lat,long), group in df.groupby(['latitude','longtitude']):
+        one_location_daily = daily_aggregates(group,'rain_in_mm')
+        one_location_daily['latitude'] = lat
+        one_location_daily['longtitude'] = long
+        one_location_daily['geometry'] = group['geometry'].iloc[0]
+        combine_locations_daily = pd.concat([combine_locations_daily, one_location_daily])
+    combine_locations_daily = gpd.GeoDataFrame(combine_locations_daily)
+
+    # Convert to TIF in order to make plot 
+    combine_locations_daily_arr = gdf_to_rasterfile(combine_locations_daily,key_values='tot_rainfall_mm' ,key_index = 'days_ahead',save_to_file = save_to_file)
+    return combine_locations_daily_arr 
+
+def plot_rainfall_map_per_day(rainfall_da, catchment_shapefile,destination_fldr):
+    """
+    create colormap of rainfall in mm per day
+    will save the image into png 
+    """
+    # --- load in catchment area shapes --- 
+    catchmentAreas = gpd.read_file(catchment_shapefile)
+
+    
+    rainfall_ds = rainfall_da.to_dataset('days_ahead')
+    rainfall_ds = rainfall_ds.rename(
+         {nmbr_days:nmbr_days for nmbr_days in rainfall_ds}
+         )
+    for nmbr_days in tqdm(rainfall_da.days_ahead.values):
+        plt.figure()
+        ax = plt.gca()
+        rainfall_ds[nmbr_days].plot(ax=ax, cmap=cmocean.cm.rain, cbar_kwargs={'label':'Predicted rainfall (mm)'})
+        catchmentAreas.boundary.plot(ax = ax, color="darkgrey", linewidth = 1., linestyle='dashed')
+
+        plt.title(f"total for day {nmbr_days}")
+        plt.xlabel('longtitude')
+        plt.ylabel('latitude')
+        plt.xlim([34, 36])
+        sns.despine(bottom=True, left=True)
+
+        basename = f"day_{nmbr_days}"
+        filename = os.path.join(destination_fldr, f"{basename}.png")
+        plt.savefig(filename, format="png", dpi=300, bbox_inches='tight');
+        plt.close();
+
+
+def plot_rainfall_map_per_timestamp(rainfall_da, catchment_shapefile, destination_fldr):
     """
     create colormap of rainfall in mm at one time stamp
     will save the image into png 
