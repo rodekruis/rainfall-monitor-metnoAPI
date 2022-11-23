@@ -8,12 +8,8 @@
 downloads/
 temp/
 
-# shapefiles (just store the .zip files) 
-*.cpg
-*.dbf
-*.prj
-*.shp
-*.shx
+# shapefiles
+shapefiles/*
 
 
 
