@@ -571,7 +571,7 @@ def plot_rainfall_map_per_day(rainfall_da, catchment_shapefile, adm3_shapefile, 
         plt.xlim([34.2, 35.4])
         sns.despine(bottom=True, left=True)
 
-        basename = f"{timestamp}_day_{nmbr_days}"
+        basename = f"{timestamp}_{nmbr_days}"
         filename = os.path.join(destination_fldr, f"{basename}.png")
         plt.savefig(filename, format="png", dpi=300, bbox_inches='tight');
         plt.close();
