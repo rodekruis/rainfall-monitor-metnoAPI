@@ -541,7 +541,7 @@ def plot_rainfall_map_per_day(rainfall_da, catchment_shapefile, adm3_shapefile, 
     for nmbr_days in tqdm(rainfall_da.hours_ahead.values):
         hour_range = int(nmbr_days[3:])
         forecast_start_time = pd.to_datetime(timestamp, format="%Y%m%d%H") + pd.Timedelta(hours=hour_range-24)
-        forecast_end_time = forecast_start_time + pd.Timedelta(hours=hour_range)
+        forecast_end_time = forecast_start_time + pd.Timedelta(hours=24)
         forecast_start_time = forecast_start_time.strftime(format="%H:00 %d-%m-%Y ")
         forecast_end_time = forecast_end_time.strftime(format="%H:00 %d-%m-%Y ")
         fig, ax = plt.subplots(figsize=(8.27, 11.69))
