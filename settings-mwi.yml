@@ -1,0 +1,27 @@
+METnoAPI:
+  user-agent: "510Global"
+  download_dir: '/home/rainfall/temp/downloads/'
+in_cloud: 
+  input_dir: '/rainfall/mwi/input-shape/'
+  input_shape_file: 'input-shape.zip'
+  output_dir: '/rainfall/mwi/' 
+geoCoordinates:
+  country_code: 'mwi'
+  locations_of_interest: 'Malawi_API_calls_IDREAM_dissolved.geojson'
+  catchment_areas: 'mwi_adm2_IDREAM.geojson'
+  admin3_shapefile: 'chikwawa_adm3_IDREAM.geojson'
+  admin4_shapefile: '10gvh_chikwawa_centroid_points.geojson'
+on_local:
+  input_dir: '/home/rainfall/input-shape/'
+  output_dir: '/home/rainfall/output/'
+  geojson_raw: Malawi_rainfal_long_format.geojson
+  tif_raw:  'Malawi_rainfall.tif'
+  csv_zonal_stats: 'Malawi_rainfall_zonal.csv'
+  png_images_dir: '/home/rainfall/output/mwi_rainfall_mm/'
+  csv_zonal_stats_daily: 'Malawi_rainfall_zonal_daily.csv'
+  trigger_status: 'Malawi_rainfall_trigger_status.txt'
+  png_bar_plot_daily_by_catchment: 'Malawi_rainfall_by_day_by_adm2.png'
+  tif_raw_daily: 'Malawi_rainfall_daily.tif'
+rainfall_threshold:
+  one_day: 50
+  three_day: 150

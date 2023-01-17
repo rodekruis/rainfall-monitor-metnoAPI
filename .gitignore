@@ -1,5 +1,5 @@
 # sensitive info
-.env.yml
+env.yml
 
 # Large files
 *.csv
@@ -9,7 +9,7 @@ downloads/
 temp/
 
 # shapefiles
-shapefiles/*
+input-shape/*
 
 
 
