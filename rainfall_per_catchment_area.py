@@ -51,7 +51,7 @@ def collect_rainfall_data(settings_file, remove_temp, store_in_cloud):
 
     now_stamp = datetime.datetime.today().strftime(format="%Y%m%d%H")
     # now_stamp = '2022111016'
-
+    agg_percentile = 90 # TODO: move to a suitable function
 
     # --- prepare folder(s) for (temporary) files --- 
     if not os.path.exists('./temp'):
@@ -118,22 +118,24 @@ def collect_rainfall_data(settings_file, remove_temp, store_in_cloud):
 
     # --- perform zonal statistics ---
     print("zonal stats...")
+    percentile_col = f"q{agg_percentile}"
     # get info in long-format
     rainfall_per_catchment = pd.DataFrame()
     for band_idx, timepoint in tqdm(enumerate(rainfall_array.time_of_prediction)):
         aggregate = zonal_statistics(rasterfile=file_raster,
                                      shapefile=local_input_dir + file_catchment_areas, #TODO: come up with a better variable name/format
                                      minval=0.,  # rainfall cannot be negative
-                                     aggregate_by=[np.mean, np.std, np.max, np.min],
-                                     nameKey = 'ADM1_EN',#'ADM2_EN',
-                                     pcodeKey = 'ADM1_PCODE',#'ADM2_PCODE',
+                                     aggregate_by=[np.mean, np.std, np.max, np.min, np.percentile],
+                                     nameKey = 'ADM2_EN',#'ADM1_EN',
+                                     pcodeKey = 'ADM2_PCODE',#'ADM1_PCODE',
                                      band=band_idx
                                      )
 
         rename_dict = {"value_1": "mean",
                        "value_2": "std",
                        "value_3": "max",
-                       "value_4": "min"}
+                       "value_4": "min",
+                       "value_5": percentile_col}
         aggregate.rename(rename_dict, axis='columns', inplace=True)
         aggregate['time_of_prediction'] = pd.to_datetime(timepoint.values)
         rainfall_per_catchment = pd.concat([rainfall_per_catchment, aggregate])
@@ -149,7 +151,7 @@ def collect_rainfall_data(settings_file, remove_temp, store_in_cloud):
     print(f"determining daily aggregates per catchment area....")
     # per catchment area 
     daily_rainfall_per_catchment, rainfall_per_catchment = daily_aggregates_per_catchment(rainfall_per_catchment, \
-        rainfall_thresholds, save_to_file=file_zonal_daily, \
+        percentile_col, rainfall_thresholds, save_to_file=file_zonal_daily, \
         save_fig_to_png=file_png_bar_plot_daily)
     check_threshold(daily_rainfall_per_catchment, 'ONE-DAY', save_to_file=file_trigger)
     check_threshold(rainfall_per_catchment, 'THREE-DAY', save_to_file=file_trigger)
@@ -311,7 +313,7 @@ def gdf_to_rasterfile(rainfall_gdf, key_values='rain_in_mm', key_index='time_of_
             last_forecast_hour
         }
         # rainfall_array = rainfall_array[rainfall_array['predicted_hrs_ahead'] == 1.]
-        rainfall_array['included'] = np.where(rainfall_array['time_of_prediction'] >= last_forecast_hour, 1, 0)
+        rainfall_array['included'] = np.where(rainfall_array['time_of_prediction'] <= last_forecast_hour, 1, 0)
         rainfall_array = rainfall_array[rainfall_array['included']==1]
     rainfall_array.set_index([key_index, 'y','x'], inplace = True)
     rainfall_array = rainfall_array[key_values].to_xarray()
@@ -381,7 +383,10 @@ def zonal_statistics(rasterfile, shapefile,
             
             #--- determine metric: Must be a one-number metric for every polygon ---
             for idx, metric in enumerate(aggregate_by):
-                aggregates_of_zones[idx].append( metric(data) )
+                if  metric == np.percentile:
+                    aggregates_of_zones[idx].append( metric(data, 90) )
+                else:
+                    aggregates_of_zones[idx].append( metric(data) )
     
     # --- store output --- 
     zonalStats = pd.DataFrame()
@@ -440,7 +445,7 @@ def daily_aggregates(df, aggregate_by):
     return daily_totals 
 
 
-def daily_aggregates_per_catchment(df, rainfall_thresholds, save_to_file=None, save_fig_to_png=None):
+def daily_aggregates_per_catchment(df, agg_col, rainfall_thresholds, save_to_file=None, save_fig_to_png=None):
     """
     aggregate predicted rainfall per day (per catchment area)
 
@@ -449,7 +454,7 @@ def daily_aggregates_per_catchment(df, rainfall_thresholds, save_to_file=None, s
     """
     combine_areas_daily = pd.DataFrame()
     for area, group in df.groupby('name'):
-        one_area_daily = daily_aggregates(group, aggregate_by='mean')
+        one_area_daily = daily_aggregates(group, aggregate_by=agg_col)
         one_area_daily['name'] = area
         combine_areas_daily =  pd.concat([combine_areas_daily, one_area_daily])
     combine_areas_daily['trigger'] = np.where(combine_areas_daily['tot_rainfall_mm'] > rainfall_thresholds['one_day'], 1 , 0)
