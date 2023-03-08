@@ -52,11 +52,11 @@ To run the code for a different country, or to simply adjust the filenames of th
   
 2. Build the Docker image: 
   ```
-  docker build --pull --rm -f "Dockerfile" -t rainfallmonitormalawimetnoapi:latest "."
+  docker build --pull --rm -f "Dockerfile" -t rainfallmonitormetnoapi:latest "."
   ``` 
 3. Run the Docker container: 
   ``` 
-  docker run --rm -it -d  rainfallmonitormalawimetnoapi:latest 
+  docker run --rm -it -d  rainfallmonitormetnoapi:latest 
   ```
 
 

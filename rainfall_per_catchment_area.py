@@ -50,7 +50,7 @@ def collect_rainfall_data(settings_file, remove_temp, store_in_cloud):
     """
 
     now_stamp = datetime.datetime.today().strftime(format="%Y%m%d%H")
-    # now_stamp = '2022111016'
+    # now_stamp = '2023030817'
     agg_percentile = 90 # TODO: move to a suitable function
 
     # --- prepare folder(s) for (temporary) files --- 
@@ -149,12 +149,12 @@ def collect_rainfall_data(settings_file, remove_temp, store_in_cloud):
 
     # ---- get daily aggregates ------- 
     print(f"determining daily aggregates per catchment area....")
-    # per catchment area 
-    daily_rainfall_per_catchment, rainfall_per_catchment = daily_aggregates_per_catchment(rainfall_per_catchment, \
+    # per catchment area
+    daily_rainfall_per_catchment, all_rainfall_per_catchment = daily_aggregates_per_catchment(rainfall_per_catchment, \
         percentile_col, rainfall_thresholds, save_to_file=file_zonal_daily, \
         save_fig_to_png=file_png_bar_plot_daily)
     check_threshold(daily_rainfall_per_catchment, 'ONE-DAY', save_to_file=file_trigger)
-    check_threshold(rainfall_per_catchment, 'THREE-DAY', save_to_file=file_trigger)
+    check_threshold(all_rainfall_per_catchment, 'THREE-DAY', save_to_file=file_trigger)
     print(f"created:{file_zonal_daily}")
     print(f"created:{file_png_bar_plot_daily}")
 
@@ -424,7 +424,6 @@ def daily_aggregates(df, aggregate_by):
         end_indx_hour  = np.where(pd.to_datetime(df.time_of_prediction)<=first_hour+one_block)[0][-1]
         last_hour = pd.to_datetime(df.time_of_prediction[end_indx_hour])
         
-        
         # slice data to get data belonging to the same day 
         data_of_day = df.iloc[start_indx_hour:end_indx_hour]
         data_of_day.reset_index(inplace=True, drop=True)
@@ -442,6 +441,7 @@ def daily_aggregates(df, aggregate_by):
         # reset loop: Start from the start of the next day 
         start_indx_hour = end_indx_hour + 1
 
+    # print('daily_totals: ', daily_totals)
     return daily_totals 
 
 
@@ -489,8 +489,8 @@ def daily_aggregates_per_location(gdf, save_to_file=None):
     Also produce PNGs with daily totals with overlay of catchment areas 
     """
 
-    # just use the predictions for 1 hour ahead (not for 6 hours ahead)
-    gdf = gdf[gdf['predicted_hrs_ahead'] == 1]
+    # # just use the predictions for 1 hour ahead (not for 6 hours ahead)
+    # gdf = gdf[gdf['predicted_hrs_ahead'] == 1]
 
     # because df.groupby() is much faster in pandas vs geopandas, convert back and forth 
     df = pd.DataFrame(gdf)  
@@ -565,23 +565,23 @@ def plot_rainfall_map_per_day(rainfall_da, catchment_shapefile, adm3_shapefile, 
         # colorbar = fig.colorbar(map, extend='both',#mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=ax, 
         #     label='Predicted rainfall (mm)', spacing='proportional',
         #     fraction=0.046, pad=0.04)
-        if not adm3_shapefile:
+        if ".geojson" in adm3_shapefile:
             adm3 = gpd.read_file(adm3_shapefile)
             adm3.boundary.plot(ax = ax, color="darkgrey", linewidth = 0.75, linestyle='dashed')
         catchmentAreas.boundary.plot(ax=ax, color="black", linewidth = 1.25)
-        if not adm4_points:
-            adm4_points = gpd.read_file(adm4_points)
-            ax.scatter(data=adm4_points, x='x_mean', y='y_mean', label='group_village_head_name')
-            for x, y, label in zip(adm4_points.geometry.x, adm4_points.geometry.y, adm4_points.group_village_head_name):
+        if ".geojson" in adm4_points:
+            adm4 = gpd.read_file(adm4_points)
+            ax.scatter(data=adm4, x='x_mean', y='y_mean', label='group_village_head_name')
+            for x, y, label in zip(adm4.geometry.x, adm4.geometry.y, adm4.group_village_head_name):
                 ax.annotate(label, xy=(x, y), xytext=(3, 3), textcoords="offset points")
 
         plt.suptitle(f"TOTAL RAINFALL FORECAST \n{location_name.upper()}", \
             fontweight='bold', fontsize=16, fontname='Arial')
-        plt.title(f'Forecast period: {forecast_start_time} to {forecast_end_time} \n Run on {production_time}', \
-            fontsize=14, fontname='Arial')
+        plt.title(f'Data source: ECMWF via MET Norway API \n Forecast period: {forecast_start_time} to {forecast_end_time} \n Run on {production_time}', \
+            fontsize=12, fontname='Arial')
         plt.xlabel('Longtitude')
         plt.ylabel('Latitude')
-        # plt.xlim([34.2, 35.4])
+        plt.xlim([34.2, 35.4])
         sns.despine(bottom=True, left=True)
 
         basename = f"{timestamp}_{nmbr_days}"
@@ -677,12 +677,19 @@ def download_from_azure_cloud_storage(cloud_filename, local_filename):
 def check_threshold(df_rain, num_days, save_to_file=None):
 
     if max(df_rain['trigger']) == 1:
-        trigger = num_days
+        trigger = True #num_days
     else:
         trigger = False
-    
-    with open(save_to_file, "w") as text_file:
-        text_file.write(f"TRIGGER: {str(trigger)}")
+    trigger_state = f"TRIGGER {num_days}: {str(trigger)}"
+
+    # if os.path.exists(save_to_file):
+    with open(save_to_file, "a+") as text_file:
+        text_file.write(trigger_state + "\n")
+        text_file.close()
+    # else:
+    #     with open(save_to_file, "w") as text_file:
+    #         text_file.write(trigger_state)
+    #         text_file.close()
 
 
 if __name__ == '__main__':
