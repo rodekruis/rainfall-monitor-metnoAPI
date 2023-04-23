@@ -17,6 +17,7 @@ COPY input-shape/  ./input-shape/
 COPY settings-mwi.yml settings-mwi.yml 
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
+COPY utils.py ./src/utils.py
 COPY rainfall_per_catchment_area.py ./src/rainfall_per_catchment_area.py 
 COPY env.yml /home/rainfall/
 CMD [ "python", "./src/rainfall_per_catchment_area.py", "--settings_file=./settings-mwi.yml", "--remove_temp", "--store_in_cloud" ]
