@@ -24,7 +24,6 @@ localStorage:
   output_dir: 'results/'
   full_output_dir: 'output_files/'
   png_images_dir: 'rainfall_mm/'
-  overlay_shapefile_in_png: 'adm2'
 
 outputFiles: 
   geojson_raw: rainfall_from_metno_long_format.geojson 

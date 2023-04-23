@@ -14,7 +14,7 @@ RUN deps='build-essential cmake gdal-bin python3-gdal libgdal-dev kmod wget apac
 WORKDIR /home/rainfall/ 
 RUN mkdir input-shape/ 
 COPY input-shape/  ./input-shape/
-COPY settings-mwi.yml settings-mwi.yml 
+COPY settings_v2.yml settings-mwi.yml 
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 COPY utils.py ./src/utils.py

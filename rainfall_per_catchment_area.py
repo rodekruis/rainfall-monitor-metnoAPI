@@ -68,22 +68,22 @@ def collect_rainfall_data(settings_file, remove_temp, store_in_cloud):
     cloud_input_shape_dirname = settings['AzureCloudStorage']['input_dir']
     input_shape_file = settings['AzureCloudStorage']['input_shape_file']
     cloud_input_shape_file = os.path.join(cloud_path, country, cloud_input_shape_dirname, input_shape_file)
-    cloud_results_dir = os.path.join(cloud_dir, country, settings['AzureCloudStorage']['output_dir'], f"{now_stamp}")
-    cloud_all_output = os.path.join(cloud_dir, country, settings['AzureCloudStorage']['full_output_dir'], f"{now_stamp}")
+    cloud_results_dir = os.path.join(cloud_path, country, settings['AzureCloudStorage']['output_dir'])
+    cloud_all_output = os.path.join(cloud_results_dir, country, settings['AzureCloudStorage']['full_output_dir'], f"{now_stamp}")
 
     
     # --- Local Storage settings --- 
     local_path = settings['localStorage']['main_dir']
     local_input_dir = os.path.join(local_path, settings['localStorage']['input_dir'])
-    local_results = os.path.join(local_path, settings['localStorage']['output_dir'], f"{now_stamp}")
-    local_all_output = os.path.join(local_path, settings['localStorage']['full_output_dir'], f"{now_stamp}")
-    local_png_dir = os.path.join(local_path, settings['localStorage']['png_images_dir'])
-    if not os.path.exists(local_png_dir):
-        os.mkdir(local_png_dir)
+    local_results = os.path.join(local_path, settings['localStorage']['output_dir'])
+    local_all_output = os.path.join(local_results, settings['localStorage']['full_output_dir'], f"{now_stamp}")
+    local_png_dir = os.path.join(local_results, settings['localStorage']['png_images_dir'])
     if not os.path.exists(local_results):
-        os.mkdir(local_results)
+        os.makedirs(local_results)
     if not os.path.exists(local_all_output):
-        os.mkdir(local_all_output)
+        os.makedirs(local_all_output)
+    if not os.path.exists(local_png_dir):
+        os.makedirs(local_png_dir)
     # --- prepare folder(s) for (temporary) files --- 
     if not os.path.exists('./temp'):
         os.mkdir('./temp')
@@ -222,10 +222,9 @@ def collect_rainfall_data(settings_file, remove_temp, store_in_cloud):
     # # --- write output files to cloud if needed  ---
     # NOTE: It is assumed you wrote all files into the same directory on local 
     if store_in_cloud:
-        cloud_dir = settings['in_cloud']['output_dir'] + f'{now_stamp}'
         output_files = [f for f in glob.glob(f'{local_all_output}/**', recursive=True) if os.path.isfile(f)]
         for file_on_local in output_files:
-            file_in_cloud = os.path.join(cloud_dir, os.path.relpath(file_on_local, local_all_output))
+            file_in_cloud = os.path.join(cloud_all_output, file_on_local)
             write_to_azure_cloud_storage(local_filename=file_on_local, cloud_filename=file_in_cloud)
             print(f"created: {file_in_cloud} in Azure datalake")
         print("--"*8 + "\n"*2)
