@@ -317,9 +317,15 @@ def gdf_to_rasterfile(rainfall_gdf, key_values='rain_in_mm', key_index='time_of_
         rainfall_array = rainfall_array[rainfall_array['included']==1]
     rainfall_array.set_index([key_index, 'y','x'], inplace = True)
     rainfall_array = rainfall_array[key_values].to_xarray()
-    
+
     if save_to_file is not None:
-        rainfall_array.rio.to_raster(save_to_file)
+        if key_index == 'time_of_prediction':
+            rainfall_array.rio.to_raster(save_to_file)
+        else:
+            for band in np.unique(rainfall_array[key_index]):
+                raster_name = save_to_file.split('.')[0] + f'_{band}.tif'
+                raster_to_save = rainfall_array.loc[band, :]
+                raster_to_save.rio.to_raster(raster_name)
     
     return rainfall_array
 
