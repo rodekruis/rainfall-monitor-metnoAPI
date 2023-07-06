@@ -11,16 +11,19 @@ RUN deps='build-essential cmake gdal-bin python3-gdal libgdal-dev kmod wget apac
    pip install --upgrade pip && \
    pip install GDAL==$(gdal-config --version)
 
+COPY fonts ./
+RUN mkdir -p /usr/share/fonts/opensans
+RUN install -m644 ./*.ttf /usr/share/fonts/opensans/
+RUN rm ./*.ttf
+
 WORKDIR /home/rainfall/ 
-RUN mkdir input-shape/ 
-COPY input-shape/  ./input-shape/
-COPY settings_v2.yml settings-mwi.yml 
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
-COPY utils.py ./src/utils.py
-COPY rainfall_per_catchment_area.py ./src/rainfall_per_catchment_area.py 
-COPY env.yml /home/rainfall/
-CMD [ "python", "./src/rainfall_per_catchment_area.py", "--settings_file=./settings-mwi.yml", "--remove_temp", "--store_in_cloud" ]
+COPY src/rainfall_forecast.py ./src/rainfall_forecast.py 
+COPY src/settings.yml ./src/settings.yml 
+COPY src/utils.py ./src/utils.py
+COPY credentials/env.yml ./credentials/env.yml
+CMD [ "python", "./src/rainfall_forecast.py", "--settings_file=./src/settings.yml", "--remove_temp", "--store_in_cloud" ]
 
 
 
