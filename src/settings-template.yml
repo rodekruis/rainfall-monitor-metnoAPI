@@ -1,0 +1,39 @@
+METnoAPI:
+  user-agent: ""
+  download_dir: '/home/rainfall/temp/downloads/'
+
+geoCoordinates:
+  country_code: "{ISO}"
+  location_name: '{Area}'
+  locations_of_interest: '{forecast_points}.geojson'
+  adm1: FALSE 
+  adm2: '{adm2}.geojson' 
+  adm3: FALSE
+  adm4: FALSE
+
+AzureCloudStorage: 
+  main_dir: '/rainfall/'
+  input_dir: 'input-shape/'
+  input_shape_file: 'input-shape.zip'
+
+localStorage: 
+  main_dir: /home/rainfall/
+  input_dir: 'input-shape/'
+  output_dir: 'results/'
+  raw_output: 'raw_files/'
+  figures_dir: 'figures/'
+
+outputFiles: 
+  geojson_raw: 'rainfall_raw.geojson'
+  tif_raw:  'rainfall.tif'
+  csv_zonal: 'rainfall_aggregate'
+  csv_zonal_daily: 'rainfall_aggregate_daily'
+  trigger_status: 'trigger_status'
+  png_bar_plot_daily_by_admin: 'daily_rainfall'
+  tif_raw_daily: 'rainfall_daily.tif'
+
+rainfallThreshold:
+  agg_percentile: 90
+  one_day: ''
+  three_day: ''
+

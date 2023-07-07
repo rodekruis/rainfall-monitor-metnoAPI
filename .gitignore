@@ -1,5 +1,6 @@
 # sensitive info
-env.yml
+credentials/env.yml
+src/settings.yml
 
 # Large files
 *.csv
@@ -7,11 +8,7 @@ env.yml
 *.tif
 downloads/
 temp/
-
-# shapefiles
-input-shape/*
-
-
+src/shapefiles
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
