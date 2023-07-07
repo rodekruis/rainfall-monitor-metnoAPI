@@ -540,9 +540,11 @@ def download_from_azure_cloud_storage(cloud_filename, local_filename):
 def check_threshold(df_rain, num_days, save_to_file):
 
     if max(df_rain['trigger']) == 1:
-        trigger = num_days
+        trigger = True
     else:
         trigger = False
+    trigger_state = f"TRIGGER {num_days}: {str(trigger)}"
     
-    with open(save_to_file, "w") as text_file:
-        text_file.write(f"TRIGGER: {str(trigger)}")
+    with open(save_to_file, "a+") as text_file:
+        text_file.write(trigger_state + "\n")
+        text_file.close()
