@@ -227,7 +227,6 @@ def daily_aggregates(df, aggregate_by):
     sum up predicted rainfall over 24 hour.
     Will continue to do such for however many days you have retreived a prediction for 
 
-    NOTE: Final day might be less than 24hrs worth of hourly predictions TODO: check this statement
     """
     # start by resetting index as an ensurance (to make it work in combination with 'groupby' operation)
     df.reset_index(inplace=True, drop=True)
@@ -505,8 +504,7 @@ def write_to_azure_cloud_storage(local_filename, cloud_filename):
     cloud_filename: Path to the destination in Azure 
     """
 
-    # TODO: Replace the following by call to Azure's secure information storage service --- 
-    with open("env.yml","r") as env:
+    with open("credentials/env.yml","r") as env:
         secrets = yaml.safe_load(env)
  
     # --- Create instance of BlobServiceClient to connect to Azure's data storage ---
@@ -527,7 +525,6 @@ def download_from_azure_cloud_storage(cloud_filename, local_filename):
     cloud_filename: Path to the file in Azure 
     """
 
-    # TODO: Replace the following by call to Azure's secure information storage service --- 
     with open("credentials/env.yml","r") as env:
         secrets = yaml.safe_load(env)
  

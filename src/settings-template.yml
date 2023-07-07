@@ -15,8 +15,6 @@ AzureCloudStorage:
   main_dir: '/rainfall/'
   input_dir: 'input-shape/'
   input_shape_file: 'input-shape.zip'
-  output_dir: 'results/'
-  raw_output: 'output_files/'
 
 localStorage: 
   main_dir: /home/rainfall/
