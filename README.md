@@ -12,8 +12,7 @@ The code comprise of 5 main tasks:
 2. Aggregate gridded data per area per 24-hour step (1-day cumulative).
 3. Check per area if 1-day cumulative rain exceeds a given threshold.
 4. Visualise forecast rainfall over area per each 24-hour step.
-
-This code was dockerised and deployed using Azure Logic App. With the Logic app, warning is automatically sent to selected recipients when the given threshold is exceeded (in step 3) in order to inform early a heavy rain forecasted.
+5. (for Malawi) This code was dockerised and deployed using Azure Logic App. With the Logic app, warning is automatically sent to selected recipients when the given threshold is exceeded (in step 3) in order to inform early a heavy rain forecasted.
 
 ## Set-up guidance
 

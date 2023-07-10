@@ -54,11 +54,11 @@ pip install -r requirements_incl_GDAL.txt
 ### Run the code  
 Simply run the following line of code in your terminal (command prompt)
 ```
-python rainfall_per_catchment_area.py --help
+python src/rainfall_forecast.py --help
 ```
 which returns: 
 ~~~
-Usage: rainfall_per_catchment_area.py [OPTIONS]
+Usage: rainfall_forecast.py [OPTIONS]
 
   Uses Metno weather API (LocationForecast) to retrieve rainfall predictions
   (approx. until ~10days in advance). Aggregate the predicted rainfall in mm
