@@ -545,6 +545,6 @@ def check_threshold(df_rain, num_days, save_to_file):
         trigger = False
     trigger_state = f"TRIGGER {num_days}: {str(trigger)}"
     
-    with open(save_to_file, "a+") as text_file:
+    with open(save_to_file + '.txt', "a+") as text_file:
         text_file.write(trigger_state + "\n")
         text_file.close()

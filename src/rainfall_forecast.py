@@ -198,13 +198,12 @@ def collect_rainfall_data(settings_file, remove_temp, store_in_cloud):
 
             
             print(f"check thresholds for {admin_lvl}...")
-            # file_trigger_admin = "_".join([file_trigger, admin_lvl]) + '.txt'
             check_threshold(rainfall_by_admin_by_day, 
                             'ONE-DAY', 
-                            save_to_file=os.path.join(local_raw_output,file_trigger))
+                            save_to_file=os.path.join(local_output,file_trigger))
             check_threshold(by_admin_by_day, 
                             'THREE-DAY', 
-                            save_to_file=os.path.join(local_raw_output,file_trigger))
+                            save_to_file=os.path.join(local_output,file_trigger))
             print("--"*8 + "\n"*2)
 
 
