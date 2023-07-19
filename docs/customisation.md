@@ -21,6 +21,14 @@ Supply the following `settings.yml`-format file or to simply adjust the filename
     - `adm2` str: (polygon) shapefile for admin level 2 (.geojson). If not available, leave the value as `FALSE`
     - `adm3` str: (polygon) shapefile for admin level 3 (.geojson). If not available, leave the value as `FALSE`
     - `adm4` str: (polygon/point) shapefile for admin level 3 (.geojson). If not available, leave the value as `FALSE`
+  - Output map settings `mapSettings`:
+    - `locationName`: 'Dimbokro Department'
+    - `pageWidth` float: width of the map printing page in inch
+    - `pageHeight` float: height of the map printing page in inch
+    - `bboxNorth` float: North border of the map box (in degree)
+    - `bboxWest` float: West border of the map box (in degree)
+    - `bboxSouth` float: South border of the map box (in degree)
+    - `bboxEast` float: East border of the map box (in degree)
   - On cloud storage `AzureCloudStorage`:
     - `main_dir`: main directory for all in- and output
     - `input_dir`: folder stored shapefile (geojson) of input

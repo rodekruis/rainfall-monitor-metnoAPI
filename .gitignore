@@ -1,6 +1,6 @@
 # sensitive info
 credentials/env.yml
-src/settings.yml
+!src/settings-template.yml
 
 # Large files
 *.csv

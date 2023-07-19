@@ -19,9 +19,7 @@ RUN rm ./*.ttf
 WORKDIR /home/rainfall/ 
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
-COPY src/rainfall_forecast.py ./src/rainfall_forecast.py 
-COPY src/settings.yml ./src/settings.yml 
-COPY src/utils.py ./src/utils.py
+COPY src ./src
 COPY credentials/env.yml ./credentials/env.yml
 CMD [ "python", "./src/rainfall_forecast.py", "--settings_file=./src/settings.yml", "--remove_temp", "--store_in_cloud" ]
 

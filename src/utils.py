@@ -122,7 +122,6 @@ def gdf_to_rasterfile(rainfall_gdf, key_values='rain_in_mm', key_index='time_of_
     """
     convert GeoDataFrame to xarray with dimensions and coordinates equal to latitude, longtitude and the time prediction
     
-    
     Produce a geoTIF file with one band per timepoint 
     """
     max_days_ahead = 3
@@ -274,7 +273,7 @@ def daily_aggregates_per_admin(df, settings, rainfall_thresholds, save_to_file, 
     creates PNG with barplot 
     """
     production_time = pd.to_datetime(timestamp, format="%Y%m%d%H").strftime(format="%H:00 %d-%m-%Y")    
-    location_name = settings['geoCoordinates']['location_name'].title()
+    mapSettings = settings['mapSettings']
     
     combine_areas_daily = pd.DataFrame()
     for area, group in df.groupby('name'):
@@ -299,7 +298,7 @@ def daily_aggregates_per_admin(df, settings, rainfall_thresholds, save_to_file, 
     plt.xticks(fontsize = 12, rotation = 90);
     plt.yticks(fontsize = 12);
     plt.suptitle(
-        f"TOTAL RAINFALL FORECAST {location_name.upper()}",
+        f"TOTAL RAINFALL FORECAST {mapSettings['locationName'].upper()}",
         fontweight='bold', 
         fontsize=14, 
         fontfamily='Open Sans')
@@ -308,8 +307,7 @@ def daily_aggregates_per_admin(df, settings, rainfall_thresholds, save_to_file, 
         fontsize=10, 
         fontfamily='Open Sans')
     plt.subplots_adjust(top=0.85)
-    # plt.xlabel("District", fontsize = 14);
-    plt.ylabel("Rainfall (mm)")#, fontsize = 16);
+    plt.ylabel("Rainfall (mm)")
     sns.despine();
     plt.savefig(save_fig_to_png, 
                 format='png', dpi=300,
@@ -361,8 +359,8 @@ def plot_rainfall_map_per_day(rainfall_da, settings, shapefile_fldr, destination
     will save the image into png 
     """
     # --- get settings --- 
-    country = settings['geoCoordinates']['country_code'].lower() # allow user to either enter "MWI" or "mwi"
-    location_name = settings['geoCoordinates']['location_name'].title()
+    country = settings['geoCoordinates']['country_code'].lower()
+    map_settings = settings['mapSettings']
     
     production_time = pd.to_datetime(timestamp, format="%Y%m%d%H").strftime(format="%H:00 %d-%m-%Y")    
     levels = [0, 5, 20, 40, 60, 80, 100]
@@ -391,7 +389,7 @@ def plot_rainfall_map_per_day(rainfall_da, settings, shapefile_fldr, destination
         forecast_end_time = forecast_end_time.strftime(format="%H:00 %d-%m-%Y ")
         
         # --- build plot: show rainfall prediction ----
-        plt.figure(figsize=(8.27, 11.69))
+        plt.figure(figsize=(map_settings['pageWidth'], map_settings['pageHeight']))
         ax = plt.gca()
         rainfall_ds[nmbr_days].plot(ax=ax, 
                                     cmap=cmap,
@@ -434,7 +432,7 @@ def plot_rainfall_map_per_day(rainfall_da, settings, shapefile_fldr, destination
 
 
         plt.suptitle(
-            f"TOTAL RAINFALL FORECAST {location_name.upper()}", \
+            f"TOTAL RAINFALL FORECAST {map_settings['locationName'].upper()}", \
             fontweight='bold', 
             fontsize=16, 
             fontfamily='Open Sans')
@@ -445,47 +443,14 @@ def plot_rainfall_map_per_day(rainfall_da, settings, shapefile_fldr, destination
         plt.subplots_adjust(top=0.9)
         plt.xlabel('Longtitude')
         plt.ylabel('Latitude')
-        plt.ylim([-17.2, -13.4])
-        plt.xlim([34, 36])
+        plt.ylim([map_settings['bboxSouth'], map_settings['bboxNorth']])
+        plt.xlim([map_settings['bboxWest'], map_settings['bboxEast']])
 
         basename = f"{timestamp}_{nmbr_days}"
         filename = os.path.join(destination_fldr, f"{basename}.png")
         plt.savefig(filename, 
                     format="png",
-                    dpi=300)#, bbox_inches='tight');
-        plt.close();
-
-
-def plot_rainfall_map_per_timestamp(rainfall_da, catchment_shapefile, destination_fldr):
-    """
-    create colormap of rainfall in mm at one time stamp
-    will save the image into png 
-    """
-
-    # --- load in catchment area shapes --- 
-    catchmentAreas = gpd.read_file(catchment_shapefile)
-
-    rainfall_ds = rainfall_da.to_dataset('time_of_prediction')
-    rainfall_ds = rainfall_ds.rename(
-         {time:timestamp_str(time) for time in rainfall_ds}
-         )
-    for timestamp in tqdm(rainfall_da.time_of_prediction.values):
-
-        time_str = timestamp_str(timestamp)
-        plt.figure()
-        ax = plt.gca()
-        rainfall_ds[time_str].plot(ax=ax, cmap=cmocean.cm.rain, cbar_kwargs={'label':'Predicted rainfall (mm)'})
-        catchmentAreas.boundary.plot(ax = ax, color="darkgrey", linewidth = 1., linestyle='dashed')
-
-        plt.title(time_str)
-        plt.xlabel('longtitude')
-        plt.ylabel('latitude')
-        plt.xlim([34, 36])
-        sns.despine(bottom=True, left=True)
-
-        basename = timestamp_str(timestamp, fmt="%Y%m%d_%H_%M_%S")
-        filename = os.path.join(destination_fldr, f"{basename}.png")
-        plt.savefig(filename, format="png", dpi=300, bbox_inches='tight');
+                    dpi=300)
         plt.close();
  
 
