@@ -27,6 +27,7 @@ import matplotlib as mpl
 import seaborn as sns 
 import cmocean
 import datetime
+import contextily as cx
 
 
 def unzip_shapefiles(dirname):
@@ -394,6 +395,7 @@ def plot_rainfall_map_per_day(rainfall_da, settings, shapefile_fldr, destination
         rainfall_ds[nmbr_days].plot(ax=ax, 
                                     cmap=cmap,
                                     vmax=150, vmin=5, 
+                                    alpha=0.5,
                                     levels=levels,
                                     cbar_kwargs=cbar_kwargs)
         plt.subplots_adjust(left=0.05, 
@@ -407,6 +409,7 @@ def plot_rainfall_map_per_day(rainfall_da, settings, shapefile_fldr, destination
                 basename = f"{country}_{admin_lvl}.geojson"
                 file_admin_shapefile = os.path.join(shapefile_fldr, basename)
                 adm = gpd.read_file(file_admin_shapefile)
+                projection = adm.crs
                 adm['coords'] = adm['geometry'].apply(lambda x: x.representative_point().coords[:])
                 adm['coords'] = [coords[0] for coords in adm['coords']]
                 # Try to show boundaries as areas 
@@ -429,8 +432,14 @@ def plot_rainfall_map_per_day(rainfall_da, settings, shapefile_fldr, destination
                                     xy=(x, y), 
                                     xytext=(3, 3), 
                                     textcoords="offset points")
-
-
+                        
+        # --- overlay with available admin boundaries, rivers, catchment areas etc. ---- 
+        if settings['geoCoordinates']['basemap']:
+            cx.add_basemap(ax, 
+                           crs=projection,
+                           source=cx.providers.OpenStreetMap.Mapnik)
+        
+        # --- overlay with available admin boundaries, rivers, catchment areas etc. ---- 
         plt.suptitle(
             f"TOTAL RAINFALL FORECAST {map_settings['locationName'].upper()}", \
             fontweight='bold', 

@@ -10,6 +10,7 @@ geoCoordinates:
   adm2: '{adm2}.geojson' 
   adm3: FALSE
   adm4: FALSE
+  basemap: TRUE
 
 AzureCloudStorage: 
   main_dir: '/rainfall/'

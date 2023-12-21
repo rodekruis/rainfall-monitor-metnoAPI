@@ -2,22 +2,31 @@
 
 Make sure you have:
 
-- Docker
-- Visual Studio Code (optional)
+- Docker, for running with Docker
+- Github account, for running in Github
+- Visual Studio Code (optional), for editing scripts
 
-## Running with Docker
+## Option 1 : Running with Docker
+Firstly, open your Docker Desktop and leave it running.
+
+Then follow the steps below in a command prompt window or in a powershell terminal in Visual Studio Code.
+
 ### Build the Docker image
-Run command:
+For the first time, an image for this tool should be created. After it is created, it is no need to build the image again. Unless, the code is updated, the image will need to be rebuilt to wrap the updates.
+
+To build the image, run command:
   ```
   docker build -t rainfallmonitormetnoapi:latest .
   ``` 
 ### Run and execute the Docker container
-Run command:
+When the building is complete, or when you would like to execute a container from the created image, you can run the command:
   ``` 
   docker run --rm -it -d  rainfallmonitormetnoapi:latest 
   ```
 ### Run interactively the Docker container
-Run command to enter the Docker container:
+Preferrably, the container can also be executed interactively. It means you can interact within the containers more than just execute the code.
+
+Run command to enter the Docker container for interactivity:
   ```
   docker run -it --entrypoint /bin/bash rainfallmonitormetnoapi:latest
   ```
@@ -34,9 +43,10 @@ In the Docker container bash, execute the code by running command:
 
 
 ## Running without Docker 
-**Note:** due to GDAL-dependent packages being used, It is recommended to use the Dockerized version when possible.
+**Note:** due to Python GDAL-dependent packages such as `geopandas`, `rasterio`, `contextily` being used, It is recommended to use the Dockerized version when possible. 
 
-If for whatever reason you want to run the code without Docker, you first install the required Python packages.
+If for whatever reason you want to run the code without Docker, you first install the required Python packages. It is highly recommended to do so in a fresh new environment.
+
 ### Using Conda 
 Use the `environment.yml` file to create a new conda environment with all the requirements installed into it. 
 ```
