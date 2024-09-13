@@ -1,9 +1,15 @@
-FROM python:3.8-slim
+FROM python:3.10-slim
 
-ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
-ENV C_INCLUDE_PATH=/usr/include/gdal
-ENV LC_ALL=C.UTF-8
-ENV LANG=C.UTF-8
+RUN pip install poetry==1.4.2
+
+ENV POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_IN_PROJECT=1 \
+    POETRY_VIRTUALENVS_CREATE=1 \
+    POETRY_CACHE_DIR=/tmp/poetry_cache \
+    CPLUS_INCLUDE_PATH=/usr/include/gdal \
+    C_INCLUDE_PATH=/usr/include/gdal \
+    LC_ALL=C.UTF-8 \
+    LANG=C.UTF-8
 
 RUN deps='build-essential cmake gdal-bin python3-gdal libgdal-dev kmod wget apache2' && \
    apt-get update && \
@@ -17,11 +23,12 @@ RUN install -m644 ./*.ttf /usr/share/fonts/opensans/
 RUN rm ./*.ttf
 
 WORKDIR /home/rainfall/ 
-COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
-COPY src ./src
+COPY pyproject.toml poetry.lock ./
+RUN poetry install --without dev --no-root && rm -rf $POETRY_CACHE_DIR
+COPY rainfall-monitor-metnoapi ./rainfall-monitor-metnoapi
 COPY credentials/env.yml ./credentials/env.yml
-CMD [ "python", "./src/rainfall_forecast.py", "--settings_file=./src/settings.yml", "--remove_temp", "--store_in_cloud" ]
+
+CMD ["poetry", "run", "python", "./rainfall-monitor-metnoapi/rainfall_forecast.py", "--settings_file=./rainfall-monitor-metnoapi/settings.yml", "--remove_temp", "--store_in_cloud" ]
 
 
 

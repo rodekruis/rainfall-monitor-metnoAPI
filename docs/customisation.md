@@ -16,13 +16,28 @@ Supply the following `settings.yml`-format file or to simply adjust the filename
   
   - Shapefile input `geoCoordinates`:
     - `country_code` str: ISO-2 or -3 code of area of interest
-    - `location_name` str: name of area of interest (for map)
     - `locations_of_interest`: GeoJSON file with coordinates for which you want to download the rainfall predictions 
     - `adm1` str: (polygon) shapefile for admin level 1 (.geojson). If not available, leave the value as `FALSE`
     - `adm2` str: (polygon) shapefile for admin level 2 (.geojson). If not available, leave the value as `FALSE`
     - `adm3` str: (polygon) shapefile for admin level 3 (.geojson). If not available, leave the value as `FALSE`
     - `adm4` str: (polygon/point) shapefile for admin level 3 (.geojson). If not available, leave the value as `FALSE`
     - `basemap` boolean: enable OpenStreetMap basemap with `TRUE`. If it is not preferred, disable by leaving the value as  `FALSE`
+
+  - Thresholds for rainfall forecast `rainfallThreshold`: 
+    - `agg_percentile` int: aggregated rainfall by a percentile over an area
+    - `one_day` int: threshold for 1-day cumulative threshold in mm.
+    - `three_day` int: threshold for 3-day cumulative threshold in mm.
+  
+  - Output map settings `mapSettings`:
+    - `locationName` str: name of area of interest (for map)
+    - `suptitle` str: main title of maps
+    - `titleLine1` str: for name of data source
+    - `titleLine2` str: text indicating which period is the forecast for
+    - `titleLine2` str: text indicating when the map is produced
+      `colorBarLabel` str: label of the colour bar (for rainfall range)
+    - `xLabel`, `xLabel` str: name of map axes 'Longtitude' and 'Latitude
+    - `pageWidth`, `pageHeight` float: dimension of map page
+    - `bboxNorth`, `bboxWest`, `bboxSouth`, `bboxEast` float: North West South East coordinate of the map bounding box
 
   - On cloud storage `AzureCloudStorage`:
     - `main_dir`: main directory for all in- and output
@@ -44,11 +59,6 @@ Supply the following `settings.yml`-format file or to simply adjust the filename
     - `trigger_status` str: file contained trigger status i.e. if threshold is exceeded (.txt)
     - `png_bar_plot_daily_by_admin` str: figure plotting column chart per area per lead time (.png)
     - `tif_raw_daily` str: tif file of daily aggregated rainfall forecast (.tif)
-  
-  - Thresholds for rainfall forecast `rainfallThreshold`: 
-    - `agg_percentile` int: aggregated rainfall by a percentile over an area
-    - `one_day` int: threshold for 1-day cumulative threshold in mm.
-    - `three_day` int: threshold for 3-day cumulative threshold in mm.
 
 ## Execute or pack the code tool
 See instruction at [Deployment](./deployment.md).

@@ -1,0 +1,56 @@
+METnoAPI:
+  user-agent: "510Global"
+  download_dir: 'temp/downloads/'
+
+geoCoordinates:
+  country_code: "CIV"
+  locations_of_interest: 'civ_dimbokro_forecast_points.geojson'
+  adm1: FALSE 
+  adm2: 'civ_adm2_dimbokro.geojson' 
+  adm3: FALSE #'civ_adm3_dimbokro.geojson' 
+  adm4: FALSE
+  basemap: TRUE
+
+rainfallThreshold:
+  agg_percentile: 90
+  one_day: 40
+  three_day: 150
+
+mapSettings:
+  locationName: 'DÉPARTEMENT DE DIMBOKRO'
+  suptitle: 'PRÉVISION DES PRÉCIPITATIONS TOTALES'
+  titleLine1: 'Source des données : ECMWF, via MET Norway'
+  titleLine2: 'Période de prévision:'
+  titleLine3: 'Exécuté le:'
+  colorBarLabel: 'Prévision des précipitations (mm)'
+  xLabel: 'Longtitude'
+  yLabel: 'Latitude'
+  pageWidth: 9
+  pageHeight: 9
+  bboxNorth: 7.1
+  bboxWest: -5
+  bboxSouth: 6.5
+  bboxEast: -4.5
+
+AzureCloudStorage: 
+  main_dir: '/rainfall/'
+  input_dir: 'input-shape/'
+  input_shape_file: 'input-shape.zip'
+
+localStorage: 
+  main_dir: '/home/rainfall/'
+  input_dir: 'input-shape/'
+  output_dir: 'results/'
+  raw_output: 'raw_files/'
+  figures_dir: 'figures/'
+
+outputFiles: 
+  geojson_raw: 'rainfall_raw.geojson' 
+  tif_raw:  'rainfall.tif'
+  csv_zonal: 'rainfall_aggregate'
+  csv_zonal_daily: 'rainfall_aggregate_daily'
+  trigger_status: 'trigger_status'
+  png_bar_plot_daily_by_admin: 'daily_rainfall'
+  tif_raw_daily: 'rainfall_daily.tif'
+  overlay_shapefile_in_png: ''
+

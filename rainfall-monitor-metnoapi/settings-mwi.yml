@@ -1,0 +1,56 @@
+METnoAPI:
+  user-agent: "510Global"
+  download_dir: '/home/rainfall/temp/downloads/'
+
+geoCoordinates:
+  country_code: "MWI"
+  locations_of_interest: 'mwi_forecast_points.geojson'
+  adm1: FALSE 
+  adm2: 'mwi_adm2.geojson' 
+  adm3: FALSE
+  adm4: FALSE
+  basemap: TRUE
+
+mapSettings:
+  locationName: 'Southern Malawi'
+  suptitle: 'TOTAL RAINFALL FORECAST'
+  titleLine1: 'Data source: ECMWF, via MET Norway'
+  titleLine2: 'Forecast period:'
+  titleLine3: 'Run on:'
+  colorBarLabel: 'Forecasted rainfall (mm)'
+  xLabel: 'Longtitude'
+  yLabel: 'Latitude'
+  pageWidth: 8.27
+  pageHeight: 11.69
+  bboxNorth: -13.4
+  bboxWest: 34
+  bboxSouth: -17.2
+  bboxEast: 36
+
+AzureCloudStorage: 
+  main_dir: '/rainfall/'
+  input_dir: 'input-shape/'
+  input_shape_file: 'input-shape.zip'
+
+localStorage: 
+  main_dir: /home/rainfall/
+  input_dir: 'input-shape/'
+  output_dir: 'results/'
+  raw_output: 'raw_files/'
+  figures_dir: 'figures/'
+
+outputFiles: 
+  geojson_raw: 'rainfall_raw.geojson' 
+  tif_raw:  'rainfall.tif'
+  csv_zonal: 'rainfall_aggregate'
+  csv_zonal_daily: 'rainfall_aggregate_daily'
+  trigger_status: 'trigger_status'
+  png_bar_plot_daily_by_admin: 'daily_rainfall'
+  tif_raw_daily: 'rainfall_daily.tif'
+  overlay_shapefile_in_png: ''
+
+rainfallThreshold:
+  agg_percentile: 90
+  one_day: 50
+  three_day: 150
+
