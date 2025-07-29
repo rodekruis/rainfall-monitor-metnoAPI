@@ -30,9 +30,13 @@ Run command to enter the Docker container for interactivity:
   ```
   docker run -it --entrypoint /bin/bash rainfallmonitormetnoapi:latest
   ```
+To view the run results (mps with forecast rainfall) when running locally, add argument at the end of the command to mount the image `results` folder to the local one:
+  ```
+  -v $pwd\results:/home/rainfall/results rainfallmonitormetnoapi:latest 
+  ```
 In the Docker container bash, execute the code by running command:
   ```
-  python src/rainfall_forecast.py
+  poetry run python rainfall-monitor-metnoapi/rainfall_forecast.py --settings_file rainfall-monitor-metnoapi/settings-<country_code>.yml
   ```
 
 **NOTE 1:** Running the code with the `--remove_temp` option will delete all intermediate files created and will just write the resulting CSV into the cloud storage.
@@ -64,7 +68,7 @@ pip install -r requirements_incl_GDAL.txt
 ### Run the code  
 Simply run the following line of code in your terminal (command prompt)
 ```
-python src/rainfall_forecast.py --help
+python rainfall-monitor-metnoapi/rainfall_forecast.py --help
 ```
 which returns: 
 ~~~
