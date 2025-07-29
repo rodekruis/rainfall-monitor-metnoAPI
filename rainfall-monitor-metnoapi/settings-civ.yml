@@ -13,7 +13,7 @@ geoCoordinates:
 
 rainfallThreshold:
   agg_percentile: 90
-  one_day: 40
+  one_day: 20
   three_day: 150
 
 mapSettings:
