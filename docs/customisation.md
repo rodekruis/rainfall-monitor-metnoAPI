@@ -26,7 +26,8 @@ Supply the following `settings.yml`-format file or to simply adjust the filename
   - Thresholds for rainfall forecast `rainfallThreshold`: 
     - `agg_percentile` int: aggregated rainfall by a percentile over an area
     - `one_day` int: threshold for 1-day cumulative threshold in mm.
-    - `three_day` int: threshold for 3-day cumulative threshold in mm.
+    - `three_day` int: threshold for 3-day cumulative threshold in mm
+    > **_Note:_**  `three_day` is currently not in use.
   
   - Output map settings `mapSettings`:
     - `locationName` str: name of area of interest (for map)
